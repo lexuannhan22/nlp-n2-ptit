@@ -1,37 +1,30 @@
 """
 MODEL: Naive Bayes + TF-IDF
 
-Multinomial Naive Bayes vốn dành cho số đếm nguyên, nhưng dùng với TF-IDF (số thực
-không âm) vẫn chạy tốt: TF-IDF đóng vai trò "số đếm có trọng số".
+Multinomial Naive Bayes: lựa chọn phù hợp cho đặc trưng TF-IDF (số thực
+không âm), coi TF-IDF như "số đếm có trọng số".
 
-Thử thêm ComplementNB: biến thể ước lượng tham số từ các lớp CÒN LẠI, thường ổn định
-hơn khi dữ liệu lệch lớp (ở đây ham ≈ 4,7 lần spam).
+    P(spam | câu) ∝ P(spam) · Π_t P(t | spam)^tfidf(t)
 
-Siêu tham số dò: loại Naive Bayes (Multinomial / Complement) và alpha.
+  P(t | spam) = (tổng tfidf(t) trong câu spam + alpha) / (tổng tfidf spam + alpha·|V|)
+  alpha = hệ số làm trơn Laplace: tránh xác suất 0 khi gặp từ chưa thấy trong lớp.
+
+Siêu tham số dò: alpha.
 
 Chạy (đứng trong thư mục BTL1, sau khi đã chạy preprocess.py và tfidf.py):
     python 3_model/nb-tfidf.py
 """
-from sklearn.naive_bayes import ComplementNB, MultinomialNB
-from sklearn.pipeline import Pipeline
+from sklearn.naive_bayes import MultinomialNB
 
 from evaluate import run_experiment
 
 ALPHAS = [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0]
 
-# Pipeline chỉ có 1 bước tên "nb". Bước này được GridSearchCV thay lần lượt bằng
-# MultinomialNB rồi ComplementNB, nhờ đó dò được cả LOẠI mô hình lẫn alpha.
-estimator = Pipeline([("nb", MultinomialNB())])
-param_grid = [
-    {"nb": [MultinomialNB()], "nb__alpha": ALPHAS},   # thử MultinomialNB với từng alpha
-    {"nb": [ComplementNB()], "nb__alpha": ALPHAS},    # thử ComplementNB với từng alpha
-]
-
 if __name__ == "__main__":
     run_experiment(
         model_name="nb-tfidf",
         feature="tfidf",
-        estimator=estimator,
-        param_grid=param_grid,
-        note="Naive Bayes (Multinomial / Complement) trên vector TF-IDF",
+        estimator=MultinomialNB(),
+        param_grid={"alpha": ALPHAS},
+        note="MultinomialNB trên vector TF-IDF",
     )

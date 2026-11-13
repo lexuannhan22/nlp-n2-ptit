@@ -1,34 +1,42 @@
 """
 MODEL: Naive Bayes + Word Embedding
 
-Vector WE là vector DÀY, giá trị thực có thể ÂM -> KHÔNG dùng được MultinomialNB
-(nó yêu cầu đặc trưng không âm, dạng đếm).
+Vector WE là vector DÀY, giá trị thực có thể ÂM -> MultinomialNB yêu cầu
+đặc trưng không âm, nên cần dịch chuyển (shift) toàn bộ vector về miền [0, +∞)
+trước khi đưa vào mô hình.
 
-Dùng Gaussian Naive Bayes: giả sử mỗi chiều của vector, trong từng lớp, theo phân phối
-chuẩn N(μ, σ²) và các chiều độc lập với nhau:
+Dùng MinMaxScaler(feature_range=(0, 1)) để:
+  - Fit trên tập TRAIN (học min/max của từng chiều từ train)
+  - Transform cả train lẫn test theo cùng thang đo -> không rò rỉ thông tin test
+  - Đảm bảo mọi giá trị >= 0, tương thích với MultinomialNB
 
-    P(spam | x) ∝ P(spam) · Π_j N(x_j ; μ_j,spam , σ²_j,spam)
+    P(spam | x') ∝ P(spam) · Π_j P(x'_j | spam)
+    với x'_j = (x_j - min_j) / (max_j - min_j)  (fit từ tập train)
 
-Giả định "các chiều độc lập" khá sai với embedding (các chiều tương quan mạnh), nên
-NB + WE thường là tổ hợp yếu nhất. Đây cũng là một điểm đáng phân tích trong báo cáo.
-
-Siêu tham số dò: var_smoothing (cộng thêm một lượng nhỏ vào phương sai để ổn định).
+Siêu tham số dò: alpha.
 
 Chạy (đứng trong thư mục BTL1, sau khi đã chạy preprocess.py và WE.py):
     python 3_model/nb-we.py
 """
-import numpy as np
-from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import MinMaxScaler
 
 from evaluate import run_experiment
 
-VAR_SMOOTHING = np.logspace(-12, -1, 12).tolist()   # 12 giá trị từ 1e-12 đến 1e-1
+ALPHAS = [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0]
+
+# Pipeline: scale về [0,1] trước (fit trên train) -> MultinomialNB sau
+estimator = Pipeline([
+    ("scaler", MinMaxScaler()),
+    ("nb",     MultinomialNB()),
+])
 
 if __name__ == "__main__":
     run_experiment(
         model_name="nb-we",
         feature="we",
-        estimator=GaussianNB(),
-        param_grid={"var_smoothing": VAR_SMOOTHING},
-        note="GaussianNB trên vector Word2Vec trung bình của câu",
+        estimator=estimator,
+        param_grid={"nb__alpha": ALPHAS},
+        note="MultinomialNB trên vector Word2Vec trung bình (MinMaxScaler về [0,1] trước)",
     )
