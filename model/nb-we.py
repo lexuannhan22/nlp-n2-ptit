@@ -39,4 +39,5 @@ if __name__ == "__main__":
         estimator=estimator,
         param_grid={"nb__alpha": ALPHAS},
         note="MultinomialNB trên vector Word2Vec trung bình (MinMaxScaler về [0,1] trước)",
+        balance_classes=True,
     )

@@ -26,4 +26,5 @@ if __name__ == "__main__":
         estimator=MultinomialNB(),
         param_grid={"alpha": ALPHAS},
         note="MultinomialNB trên vector đếm từ (BoW)",
+        balance_classes=True,
     )

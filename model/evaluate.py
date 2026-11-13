@@ -34,6 +34,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sklearn.utils.class_weight import compute_sample_weight
 
 ROOT = Path(__file__).resolve().parents[1]
 FEAT_DIR = ROOT / "feature_extraction" / "features"
@@ -99,7 +100,14 @@ def _update_summary(row: dict):
     return df
 
 
-def run_experiment(model_name: str, feature: str, estimator, param_grid: dict, note: str = ""):
+def run_experiment(
+    model_name: str,
+    feature: str,
+    estimator,
+    param_grid: dict,
+    note: str = "",
+    balance_classes: bool = False,
+):
     print("=" * 70)
     print(f" MODEL: {model_name}   |   ĐẶC TRƯNG: {feature.upper()}")
     if note:
@@ -115,8 +123,17 @@ def run_experiment(model_name: str, feature: str, estimator, param_grid: dict, n
     # ---- 1. Tìm siêu tham số bằng cross-validation trên TRAIN ------------
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEED)
     search = GridSearchCV(estimator, param_grid, scoring="f1", cv=cv, n_jobs=-1, refit=True)
+    fit_params = {}
+    if balance_classes:
+        sample_weight = compute_sample_weight(class_weight="balanced", y=y_train)
+        if hasattr(estimator, "steps"):
+            ten_buoc_cuoi = estimator.steps[-1][0]
+            fit_params[f"{ten_buoc_cuoi}__sample_weight"] = sample_weight
+        else:
+            fit_params["sample_weight"] = sample_weight
+
     t0 = time.perf_counter()
-    search.fit(X_train, y_train)
+    search.fit(X_train, y_train, **fit_params)
     search_time = time.perf_counter() - t0
     print(f"\nGridSearchCV 5-fold ({len(search.cv_results_['params'])} tổ hợp) "
           f"trong {search_time:.1f}s")
@@ -127,7 +144,7 @@ def run_experiment(model_name: str, feature: str, estimator, param_grid: dict, n
     # ---- 2. Huấn luyện lại mô hình tốt nhất (đo thời gian) ---------------
     model = search.best_estimator_
     t0 = time.perf_counter()
-    model.fit(X_train, y_train)
+    model.fit(X_train, y_train, **fit_params)
     train_time = time.perf_counter() - t0
 
     t0 = time.perf_counter()
@@ -169,7 +186,11 @@ def run_experiment(model_name: str, feature: str, estimator, param_grid: dict, n
     print()
     _print_confusion(cm)
     print("\nClassification report:")
-    print(classification_report(y_test, y_pred, target_names=["ham", "spam"], digits=4))
+    print(classification_report(
+        y_test, y_pred,
+        labels=[0, 1], target_names=["ham", "spam"],
+        digits=4, zero_division=0,
+    ))
 
     # ---- 4. Ví dụ đoán sai ------------------------------------------------
     texts = np.array(data.get("test_text", [""] * len(y_test)), dtype=object)

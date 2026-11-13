@@ -27,4 +27,5 @@ if __name__ == "__main__":
         estimator=MultinomialNB(),
         param_grid={"alpha": ALPHAS},
         note="MultinomialNB trên vector TF-IDF",
+        balance_classes=True,
     )
