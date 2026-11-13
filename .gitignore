@@ -45,7 +45,8 @@ MANIFEST
 ehthumbs.db
 Thumbs.db
 
-feature_extraction/features/
+feature_extraction/features/*
+!feature_extraction/features/README.md
 
 # fasttext
 results/fasttext_confusion_matrix.png
