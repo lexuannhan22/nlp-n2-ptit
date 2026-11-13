@@ -168,36 +168,6 @@ Các lệnh huấn luyện có thể mất thời gian do dò siêu tham số; �
 
 ---
 
-## 4. Kết quả thực nghiệm
-
-Kết quả kiểm thử trên tập Test (964 mẫu, gồm 758 câu Ham và 206 câu Spam, tỉ lệ Spam ~21.4%):
-
-| Mô hình | Đặc trưng | Accuracy | Precision (Spam) | Recall (Spam) | F1-Score (Spam) | F1 Macro | ROC-AUC | PR-AUC |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **SVM (RBF Kernel)** | **Word2Vec (WE)** | **95.64%** | **91.41%** | 87.86% | **89.60%** | **93.42%** | **0.9779** | **0.9340** |
-| **SVM (Linear)** | BoW | 95.02% | 84.35% | **94.17%** | 88.99% | 92.89% | 0.9772 | 0.9078 |
-| **SVM (Linear)** | TF-IDF | 94.61% | 85.98% | 89.32% | 87.62% | 92.09% | 0.9737 | 0.8950 |
-| **Complement Naive Bayes** | TF-IDF | 93.98% | 84.58% | 87.86% | 86.19% | 91.17% | 0.9747 | 0.9212 |
-| **Multinomial Naive Bayes** | BoW | 93.98% | 87.76% | 83.50% | 85.57% | 90.89% | 0.9739 | 0.9125 |
-| **Gaussian Naive Bayes** | Word2Vec (WE) | 80.91% | 54.17% | 69.42% | 60.85% | 74.12% | 0.8754 | 0.5862 |
-
----
-
-## 5. Các lưu ý quan trọng trong thiết kế hệ thống
-
-1. **Loại bỏ trùng lặp trước khi chia Train / Test**:
-   - Dữ liệu thô có hơn 50% câu đánh giá trùng lặp ngắn (như *"Tốt"*, *"Ok"*, *"Hàng đẹp"*...).
-   - Nếu chia ngẫu nhiên trước khi lọc trùng, các câu giống hệt nhau sẽ rơi vào cả tập Train và Test (data leakage), dẫn đến điểm số test cao ảo. Việc lọc trùng câu sau khi làm sạch đảm bảo mô hình thực sự học được năng lực tổng quát hóa.
-2. **Chia Train / Test phân tầng và dùng chung**:
-   - Chia một lần duy nhất ở bước tiền xử lý theo tỷ lệ 80/20 có phân tầng theo nhãn (`stratified`).
-   - Cả 3 phương pháp trích xuất đặc trưng (BoW, TF-IDF, WE) dùng chung một phân chia này, bảo đảm tính công bằng tuyệt đối khi so sánh các mô hình.
-3. **Chống rò rỉ thông tin (Data Leakage)**:
-   - Các bộ vectorizer (`CountVectorizer`, `TfidfVectorizer`) và mô hình Word2Vec **chỉ được `fit` trên tập Train**, tập Test chỉ thực hiện `transform`.
-   - Với SVM trên Word2Vec, bộ chuẩn hóa `StandardScaler` được đặt trong `Pipeline` để đảm bảo khi Cross-Validation, thang đo chỉ được tính trên các fold train con.
-4. **Đánh giá trên tập dữ liệu lệch lớp (Imbalanced Data)**:
-   - Tỷ lệ Spam trong tập dữ liệu là ~21.4%.
-   - Do dữ liệu mất cân bằng, chỉ số **F1-score lớp Spam** và **PR-AUC** được ưu tiên làm tiêu chí đánh giá cốt lõi thay vì chỉ dựa vào Accuracy thông thường.
-
 ## ✅ Chạy dự án bằng Docker
 
 ### Bước 1 — Kiểm tra Docker đã cài chưa
