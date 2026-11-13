@@ -1,4 +1,4 @@
-"""Đọc, làm sạch và chia dữ liệu; nhãn 0 = ham, 1 = spam."""
+"""Đọc dữ liệu FastText; dùng split có sẵn nếu CSV đã được chia."""
 import re
 import unicodedata
 
@@ -16,14 +16,15 @@ def clean_text(text):
 
 def load_data(csv_path):
     df = pd.read_csv(csv_path, keep_default_na=False)
-    if not {"review", "label"}.issubset(df.columns):
-        raise ValueError("CSV cần có hai cột review và label.")
+    text_column = "noi_dung" if "noi_dung" in df.columns else "review"
+    if text_column not in df.columns or "label" not in df.columns:
+        raise ValueError("CSV cần có cột noi_dung (hoặc review) và label.")
 
     df["label"] = pd.to_numeric(df["label"], errors="raise")
     if not df["label"].isin([0, 1]).all():
         raise ValueError("Nhãn phải là 0 (ham) hoặc 1 (spam).")
     df["label"] = df["label"].astype(int)
-    df["text"] = df["review"].apply(clean_text)
+    df["text"] = df[text_column].apply(clean_text)
 
     # Tách câu có nhãn mâu thuẫn, không tự quyết định sửa nhãn.
     conflict = df.groupby("text")["label"].transform("nunique") > 1
@@ -32,7 +33,18 @@ def load_data(csv_path):
     if df["label"].nunique() != 2 or df["label"].value_counts().min() < 5:
         raise ValueError("Cần ít nhất 5 câu riêng biệt mỗi lớp sau xử lý.")
 
-    # Loại trùng trước khi chia để cùng câu không nằm ở cả train và test.
+    # Nếu CSV đã có split, giữ nguyên cách chia dùng chung với BoW/TF-IDF/WE.
+    if "split" in df.columns:
+        df["split"] = df["split"].astype(str).str.strip().str.lower()
+        if not df["split"].isin(["train", "test"]).all():
+            raise ValueError("Cột split chỉ được chứa 'train' hoặc 'test'.")
+        train = df[df["split"] == "train"].copy()
+        test = df[df["split"] == "test"].copy()
+        if train.empty or test.empty:
+            raise ValueError("Cột split phải có cả dữ liệu train và test.")
+        return train, test
+
+    # CSV chưa có split thì tự chia ngẫu nhiên, có phân tầng theo nhãn.
     return train_test_split(
         df,
         test_size=0.2,

@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "processed", "processed.csv")
+DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "processed", "new_processed.csv")
 FEAT_DIR = os.path.join(os.path.dirname(__file__), "features")
 
 NGRAM_MAX = 2
@@ -46,8 +46,8 @@ vectorizer = TfidfVectorizer(
 )
 
 # --- 3. fit CHỈ trên train, transform cho cả train và test ---
-X_train = vectorizer.fit_transform(train["clean_text"])
-X_test = vectorizer.transform(test["clean_text"])
+X_train = vectorizer.fit_transform(train["noi_dung"])
+X_test = vectorizer.transform(test["noi_dung"])
 y_train = train["label"].to_numpy()
 y_test = test["label"].to_numpy()
 feature_names = vectorizer.get_feature_names_out()
@@ -73,7 +73,7 @@ print("Top token nghiêng về HAM :", ", ".join(feature_names[np.argsort(diff)[
 # --- 6. Lưu kết quả ---
 os.makedirs(FEAT_DIR, exist_ok=True)
 joblib.dump({"X_train": X_train, "X_test": X_test, "y_train": y_train, "y_test": y_test,
-             "feature_names": feature_names, "test_text": test["review"].tolist()},
+             "feature_names": feature_names, "test_text": test["noi_dung"].tolist()},
             f"{FEAT_DIR}/tfidf.pkl")
 joblib.dump(vectorizer, f"{FEAT_DIR}/tfidf_vectorizer.pkl")
 print(f"\nĐã lưu: {FEAT_DIR}/tfidf.pkl và {FEAT_DIR}/tfidf_vectorizer.pkl")

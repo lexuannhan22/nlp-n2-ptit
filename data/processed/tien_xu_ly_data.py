@@ -1,7 +1,3 @@
-"""Cài thư viện: pip install pandas emoji underthesea
-Chạy: python tien_xu_ly_data.py
-Đặt CSV và script cùng thư mục rồi chạy lệnh trong thư mục đó.
-"""
 
 import html
 import re
@@ -10,10 +6,13 @@ import unicodedata
 import emoji
 import pandas as pd
 from underthesea import word_tokenize
+from sklearn.model_selection import train_test_split
 
 
 FILE_INPUT = "C:/Users/Admin/nlp-n2-ptit/data/labeled/raw_7k2_deepseek_labeled.csv"
 FILE_OUTPUT = "C:/Users/Admin/nlp-n2-ptit/data/processed/new_processed.csv"
+TEST_SIZE = 0.2
+RANDOM_STATE = 42
 
 TEENCODE = {
     "ko": "không", "k": "không", "hok": "không", "hông": "không",
@@ -96,6 +95,26 @@ def loai_bo_dong_trung(df):
     return df.reset_index(drop=True)
 
 
+def chia_train_test(df):
+    """Thêm cột split với 80% train, 20% test và giữ tỉ lệ nhãn tương tự."""
+    train_idx, test_idx = train_test_split(
+        df.index,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
+        stratify=df["label"],
+    )
+
+    df["split"] = "train"
+    df.loc[test_idx, "split"] = "test"
+
+    print("Phân chia dữ liệu:")
+    for ten_tap in ("train", "test"):
+        tap = df[df["split"] == ten_tap]
+        print(f"  {ten_tap}: {len(tap)} dòng")
+
+    return df
+
+
 def main():
     # Đọc dữ liệu rồi lần lượt xử lý nội dung.
     df = doc_du_lieu(FILE_INPUT)
@@ -111,6 +130,8 @@ def main():
 
     # Loại các dòng trùng trước khi lưu kết quả.
     df = loai_bo_dong_trung(df)
+    df = chia_train_test(df)
+
     df.to_csv(FILE_OUTPUT, index=False, encoding="utf-8-sig")
     print("Đã lưu:", FILE_OUTPUT)
     print("Số mẫu mỗi nhãn:")

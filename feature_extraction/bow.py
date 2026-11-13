@@ -10,11 +10,11 @@ Lưu ý quan trọng: CountVectorizer chỉ được fit trên tập TRAIN, rồ
 để transform tập TEST. Nếu fit trên toàn bộ dữ liệu thì từ điển "biết trước" từ của
 tập test -> rò rỉ thông tin.
 
-Đầu vào : data/processed/processed.csv
-Đầu ra  : features/bow.pkl             (X_train, X_test, y_train, y_test, feature_names)
-          features/bow_vectorizer.pkl  (để biến đổi câu mới khi dự đoán)
+Đầu vào : data/processed/new_processed.csv
+Đầu ra  : feature_extraction/features/bow.pkl
+          feature_extraction/features/bow_vectorizer.pkl
 
-Chạy (đứng trong thư mục BTL1):  python 2_trich_chon_dac_trung/bow.py
+Chạy từ thư mục dự án:  python feature_extraction/bow.py
 """
 import os
 
@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 
-DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "processed", "processed.csv")
+DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "processed", "new_processed.csv")
 FEAT_DIR = os.path.join(os.path.dirname(__file__), "features")
 
 NGRAM_MAX = 2         # 1 = chỉ từ đơn; 2 = thêm cụm 2 từ ("tủ lạnh", "không tốt" thành 1 đặc trưng)
@@ -46,8 +46,8 @@ vectorizer = CountVectorizer(
 )
 
 # --- 3. fit CHỈ trên train, transform cho cả train và test ---
-X_train = vectorizer.fit_transform(train["clean_text"])
-X_test = vectorizer.transform(test["clean_text"])
+X_train = vectorizer.fit_transform(train["noi_dung"])
+X_test = vectorizer.transform(test["noi_dung"])
 y_train = train["label"].to_numpy()
 y_test = test["label"].to_numpy()
 feature_names = vectorizer.get_feature_names_out()
@@ -69,7 +69,7 @@ print("Top token nghiêng về HAM :", ", ".join(feature_names[np.argsort(diff)[
 # --- 5. Lưu kết quả ---
 os.makedirs(FEAT_DIR, exist_ok=True)
 joblib.dump({"X_train": X_train, "X_test": X_test, "y_train": y_train, "y_test": y_test,
-             "feature_names": feature_names, "test_text": test["review"].tolist()},
+             "feature_names": feature_names, "test_text": test["noi_dung"].tolist()},
             f"{FEAT_DIR}/bow.pkl")
 joblib.dump(vectorizer, f"{FEAT_DIR}/bow_vectorizer.pkl")
 print(f"\nĐã lưu: {FEAT_DIR}/bow.pkl và {FEAT_DIR}/bow_vectorizer.pkl")

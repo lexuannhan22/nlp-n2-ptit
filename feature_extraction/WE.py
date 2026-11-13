@@ -17,7 +17,7 @@ Word2Vec chỉ được huấn luyện trên TRAIN để tập test hoàn toàn 
 (Dữ liệu train khá nhỏ ~3.9 nghìn câu nên vector chưa thật tốt; dùng vector
 huấn luyện sẵn như PhoW2V sẽ cải thiện đáng kể.)
 
-Đầu vào : data/processed/processed.csv
+Đầu vào : data/processed/new_processed.csv
 Đầu ra  : features/we.pkl            (X_train, X_test, y_train, y_test)
           features/we_word2vec.model (mô hình Word2Vec để biến đổi câu mới)
 
@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 from gensim.models import Word2Vec
 
-DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "processed", "processed.csv")
+DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "processed", "new_processed.csv")
 FEAT_DIR = os.path.join(os.path.dirname(__file__), "features")
 
 DIM = 100          # số chiều của mỗi vector từ
@@ -68,8 +68,8 @@ def doc_vector(tokens, wv, idf=None):
 df = pd.read_csv(DATA_PATH, encoding="utf-8-sig")
 train = df[df["split"] == "train"]
 test = df[df["split"] == "test"]
-train_tokens = [t.split() for t in train["clean_text"]]
-test_tokens = [t.split() for t in test["clean_text"]]
+train_tokens = [t.split() for t in train["noi_dung"]]
+test_tokens = [t.split() for t in test["noi_dung"]]
 
 # --- 2. Huấn luyện Word2Vec trên train ---
 w2v = Word2Vec(
@@ -105,7 +105,7 @@ print(f"Số câu test không có token nào trong từ điển (vector 0): {n_o
 # --- 4. Lưu kết quả ---
 os.makedirs(FEAT_DIR, exist_ok=True)
 joblib.dump({"X_train": X_train, "X_test": X_test, "y_train": y_train, "y_test": y_test,
-             "pooling": POOLING, "idf": idf, "test_text": test["review"].tolist()},
+             "pooling": POOLING, "idf": idf, "test_text": test["noi_dung"].tolist()},
             f"{FEAT_DIR}/we.pkl")
 w2v.save(f"{FEAT_DIR}/we_word2vec.model")
 print(f"\nĐã lưu: {FEAT_DIR}/we.pkl và {FEAT_DIR}/we_word2vec.model")

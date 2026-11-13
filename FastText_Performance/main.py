@@ -1,5 +1,6 @@
 """Chạy: python main.py [đường_dẫn_CSV]. Chỉ in performance ra terminal."""
 import argparse
+import sys
 from pathlib import Path
 from time import perf_counter
 
@@ -15,10 +16,14 @@ from fasttext_model import predict_test, train_model
 
 
 def main():
+    # Tránh lỗi in tiếng Việt trên terminal Windows dùng bảng mã cũ.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
     parser = argparse.ArgumentParser(description="Đánh giá FastText spam/ham")
     parser.add_argument(
         "csv", nargs="?", type=Path,
-        default=Path(__file__).resolve().parents[1] / "data" / "labeled" / "reviews_spam_ham.csv",
+        default=Path(__file__).resolve().parents[1] / "data" / "processed" / "new_processed.csv",
     )
     args = parser.parse_args()
 
