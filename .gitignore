@@ -44,3 +44,52 @@ MANIFEST
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+feature_extraction/features/
+
+# fasttext
+results/fasttext_confusion_matrix.png
+results/fasttext_errors.csv
+results/fasttext.json
+
+# nb-bow
+results/nb-bow_confusion_matrix.png
+results/nb-bow_errors.csv
+results/nb-bow.json
+results/nb-bow.pkl
+
+# nb-tfidf
+results/nb-tfidf_confusion_matrix.png
+results/nb-tfidf_errors.csv
+results/nb-tfidf.json
+results/nb-tfidf.pkl
+
+# nb-we
+results/nb-we_confusion_matrix.png
+results/nb-we_errors.csv
+results/nb-we.json
+results/nb-we.pkl
+
+# svm-bow
+results/svm-bow_confusion_matrix.png
+results/svm-bow_errors.csv
+results/svm-bow.json
+results/svm-bow.pkl
+
+# svm-tfidf
+results/svm-tfidf_confusion_matrix.png
+results/svm-tfidf_errors.csv
+results/svm-tfidf.json
+results/svm-tfidf.pkl
+
+# svm-we
+results/svm-we_confusion_matrix.png
+results/svm-we_errors.csv
+results/svm-we.json
+results/svm-we.pkl
+
+# summary
+results/summary.csv
+
+results/*
+!results/README.md
